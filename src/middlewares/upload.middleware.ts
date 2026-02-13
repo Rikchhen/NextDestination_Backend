@@ -1,5 +1,5 @@
 import multer from "multer";
-import uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
 
@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     console.log("Multer filename called:", file.originalname);
-    const uniqueSuffix = uuid.v4();
+    const uniqueSuffix = uuidv4();
     const extension = path.extname(file.originalname);
     cb(null, `${file.fieldname}-${uniqueSuffix}${extension}`);
   },
