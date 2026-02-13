@@ -7,9 +7,12 @@ import { RegisterUserDTO, LoginUserDTO, EditUserDTO } from "../dtos/user.dto";
 import { IUser } from "../models/user.model";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { HttpError } from "../../../errorrs/error";
+import { sendEmail } from "../../../config/email";
 
-const userRepository: UserRepositoryInterface = new UserRepository();
+const userRepository = new UserRepository();
 dotenv.config();
+const CLIENT_URL = process.env.CLIENT_URL as string;
 
 export class UserService {
   //    helper function: Filter user object to exclude password and the version key that mongoose creates
@@ -46,7 +49,7 @@ export class UserService {
 
   //  login function [jwt token is created here and not in controller because its easier that way]
 
-  async loginUser(phoneNumber: String, password: string) {
+  async loginUser(phoneNumber: string, password: string) {
     // console.log("Service received:", phoneNumber, password);
     const user = await userRepository.getUserByNumber(phoneNumber);
 
@@ -142,5 +145,42 @@ export class UserService {
 
     await userRepository.deleteUser(userId);
     return { message: "User deleted successfully" };
+  }
+
+  // Request Password Reset logic
+  async sendResetPasswordEmail(email?: string) {
+    if (!email) {
+      throw new HttpError(400, "Email is required");
+    }
+    const user = await userRepository.getUserByEmail(email);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY!, {
+      expiresIn: "1h",
+    }); // 1 hour expiry
+    const resetLink = `${CLIENT_URL}/reset-password?token=${token}`;
+    const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`;
+    await sendEmail(user.email, "Password Reset", html);
+    return user;
+  }
+
+  async resetPassword(token?: string, newPassword?: string) {
+    try {
+      if (!token || !newPassword) {
+        throw new HttpError(400, "Token and new password are required");
+      }
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY!);
+      const userId = decoded.id;
+      const user = await userRepository.getUserById(userId);
+      if (!user) {
+        throw new HttpError(404, "User not found");
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await userRepository.updateUser(userId, { password: hashedPassword });
+      return user;
+    } catch (error) {
+      throw new HttpError(400, "Invalid or expired token");
+    }
   }
 }
