@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user.controller";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import { uploads } from "../../middlewares/upload.middleware";
+import { authMiddleware } from "../../../middlewares/auth.middleware";
+import { uploads } from "../../../middlewares/upload.middleware";
 
 const userRouter = Router();
 const userController = new UserController();
@@ -23,5 +23,11 @@ userRouter.patch(
 );
 
 userRouter.delete("/me", authMiddleware, userController.deleteUser);
+
+userRouter.post(
+  "/request-password-reset",
+  userController.sendResetPasswordEmail,
+);
+userRouter.post("/reset-password/:token", userController.resetPassword);
 
 export default userRouter;

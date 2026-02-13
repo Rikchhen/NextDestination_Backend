@@ -2,8 +2,11 @@ import { Request, Response } from "express";
 import { AdminService } from "../service/admin.service";
 import { success } from "zod";
 import { AdminRepository } from "../repository/admin.repository";
+import { UserService } from "../../user/services/user.service";
+import { EditUserDTO } from "../../user/dtos/user.dto";
 
 const adminService = new AdminService();
+const userService = new UserService();
 export class AdminController {
   // User Operations
   getAllusers = async (req: Request, res: Response) => {
@@ -71,7 +74,39 @@ export class AdminController {
       });
     }
   };
+  editUser = async (req: Request, res: Response) => {
+    try {
+      const editDetailsParsed = EditUserDTO.safeParse(req.body);
+      console.log("Details aayo hai:", editDetailsParsed);
+      if (!editDetailsParsed.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid input",
+          errors: editDetailsParsed.error.format(),
+        });
+      }
+      const { userId } = req.params;
+      console.log("user id", userId);
+      const profilePictureFileName = req.file?.filename;
+      console.log("File Aayo hai:", profilePictureFileName);
 
+      const updatedUser = await userService.updateUser(userId, {
+        ...editDetailsParsed.data,
+        profilePicture: profilePictureFileName,
+      });
+      console.log("Update bhayera aako data", updatedUser);
+      return res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
+    } catch (error: any) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || "Something went wrong",
+      });
+    }
+  };
   deleteUser = async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;

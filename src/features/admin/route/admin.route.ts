@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/auth.middleware";
-import { adminOnly } from "../../middlewares/admin.middleware";
+import { authMiddleware } from "../../../middlewares/auth.middleware";
+import { adminOnly } from "../../../middlewares/admin.middleware";
 import { AdminController } from "../controller/admin.controller";
 
 const adminRouter = Router();
@@ -27,7 +27,13 @@ adminRouter.get(
   adminOnly,
   adminController.getUserByPhoneNumber,
 );
-
+// User Edit Route
+adminRouter.patch(
+  "/users/edit/:userId",
+  authMiddleware,
+  adminOnly,
+  adminController.editUser,
+);
 // User Delete Routes
 adminRouter.delete(
   "/users/deleteAll",
