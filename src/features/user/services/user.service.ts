@@ -49,9 +49,9 @@ export class UserService {
 
   //  login function [jwt token is created here and not in controller because its easier that way]
 
-  async loginUser(phoneNumber: string, password: string) {
+  async loginUser(email: string, password: string) {
     // console.log("Service received:", phoneNumber, password);
-    const user = await userRepository.getUserByNumber(phoneNumber);
+    const user = await userRepository.getUserByEmail(email);
 
     console.log("User found:", user);
     if (!user) {

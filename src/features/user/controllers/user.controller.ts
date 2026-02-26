@@ -40,9 +40,9 @@ export class UserController {
           .json({ success: false, message: "Invalid Credentials" });
       }
 
-      const { phoneNumber, password } = loginDetailsParsed.data;
+      const { email, password } = loginDetailsParsed.data;
       // console.log("Parse bahyera aako",loginDetailsParsed.data);
-      const loginResult = await userService.loginUser(phoneNumber, password);
+      const loginResult = await userService.loginUser(email, password);
       console.log(loginResult);
       return res.status(201).json({
         success: true,
