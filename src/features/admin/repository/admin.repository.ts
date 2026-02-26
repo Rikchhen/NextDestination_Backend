@@ -25,7 +25,7 @@ export class AdminRepository implements IAdminRepository {
     return UserModel.findById(userId).exec();
   }
   async getUserByEmail(email: string): Promise<IUser | null> {
-    return UserModel.findOne({ username: email }).exec();
+    return UserModel.findOne({ email }).exec();
   }
   async deleteUser(userId: string): Promise<IUser | null> {
     return UserModel.findByIdAndDelete(userId).exec();
