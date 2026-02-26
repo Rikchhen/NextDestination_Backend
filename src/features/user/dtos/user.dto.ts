@@ -22,7 +22,7 @@ export const RegisterUserDTO = UserSchema.pick({
 export type RegisterUserDTO = z.infer<typeof RegisterUserDTO>;
 
 export const LoginUserDTO = UserSchema.pick({
-  phoneNumber: true,
+  email: true,
   password: true,
 });
 export type LoginUserDTO = z.infer<typeof LoginUserDTO>;
