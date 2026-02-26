@@ -2,8 +2,12 @@ import bodyParser from "body-parser";
 import express, { Application } from "express";
 import cors from "cors";
 import path from "path";
-import adminRouter from "./features/admin/route/admin.route";
+import adminRouter from "./features/admin/routes/admin.route";
 import userRouter from "./features/user/routes/user.route";
+import businessRouter from "./features/business/routes/business.routes";
+import tripRouter from "./features/trip/routes/trip.route";
+import bookingRouter from "./features/booking/routes/booking.route";
+import ticketRouter from "./features/ticket/routes/ticket.routes";
 
 const app: Application = express();
 
@@ -26,4 +30,12 @@ app.use("/api/admin", adminRouter);
 //User Routes
 app.use("/api/user", userRouter);
 
+// business routes
+app.use("/api/business", businessRouter);
+//Trip routes
+app.use("/api/trip", tripRouter);
+
+app.use("/api/booking", bookingRouter);
+
+app.use("/api/ticket", ticketRouter);
 export default app;
