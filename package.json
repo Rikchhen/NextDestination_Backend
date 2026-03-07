@@ -4,7 +4,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
-    "test": "jest --verbose --detectOpenHandles"
+    "test": "cross-env NODE_ENV=test jest --verbose --detectOpenHandles",
+    "test:integration": "cross-env NODE_ENV=test jest --selectProjects integration --verbose --runInBand --detectOpenHandles",
+    "test:unit": "cross-env NODE_ENV=test jest --selectProjects unit --verbose",
+    "coverage": "cross-env NODE_ENV=test jest --coverage --runInBand --detectOpenHandles",
+    "coverage:unit": "cross-env NODE_ENV=test jest --selectProjects unit --coverage",
+    "coverage:integration": "cross-env NODE_ENV=test jest --selectProjects integration --coverage --runInBand --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
@@ -24,12 +29,14 @@
     "@types/nodemon": "^1.19.6",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.11",
     "ts-jest": "^29.4.6",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.1",
     "cors": "^2.8.6",

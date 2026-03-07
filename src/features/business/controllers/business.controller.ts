@@ -18,7 +18,7 @@ export class BusinessController {
         return res.status(400).json({ errors: validation.error });
       }
 
-      const profilePicture = req.file?.filename;
+      const profilePicture = req.file?.filename ?? req.file?.originalname;
       if (!profilePicture) {
         return res
           .status(400)
