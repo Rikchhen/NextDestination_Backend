@@ -40,13 +40,13 @@ export class WalletService {
   }
 
   async creditUser(data: CreditWalletDTO, session?: mongoose.ClientSession) {
-    const wallet = await this.getOrCreateWallet(
-      data.ownerId,
-      data.ownerType,
-      session,
-    );
-
     if (session) {
+      const wallet = await this.getOrCreateWallet(
+        data.ownerId,
+        data.ownerType,
+        session,
+      );
+
       const updatedWallet = await this.walletRepository.incrementBalance(
         wallet._id!.toString(),
         data.amount,
@@ -75,20 +75,48 @@ export class WalletService {
       return { wallet: updatedWallet, transaction };
     }
 
-    const sessionLocal = await mongoose.startSession();
-    sessionLocal.startTransaction();
+    const wallet = await this.getOrCreateWallet(data.ownerId, data.ownerType);
 
-    try {
-      const walletLocal = await this.getOrCreateWallet(
+    const updatedWallet = await this.walletRepository.incrementBalance(
+      wallet._id!.toString(),
+      data.amount,
+    );
+
+    if (!updatedWallet) {
+      throw new Error("Failed to update wallet balance");
+    }
+
+    const transaction = await this.transactionRepository.createTransaction({
+      wallet: wallet._id,
+      type: "credit",
+      amount: data.amount,
+      balance: updatedWallet.balance,
+      description: data.description,
+      reference: data.reference,
+      metadata: data.metadata,
+      ownerId: data.ownerId,
+      ownerType: data.ownerType,
+    });
+
+    return { wallet: updatedWallet, transaction };
+  }
+
+  async debitUser(data: DebitWalletDTO, session?: mongoose.ClientSession) {
+    if (session) {
+      const wallet = await this.getOrCreateWallet(
         data.ownerId,
         data.ownerType,
-        sessionLocal,
+        session,
       );
 
-      const updatedWallet = await this.walletRepository.incrementBalance(
-        walletLocal._id!.toString(),
+      if (wallet.balance < data.amount) {
+        throw new HttpError(400, "Insufficient balance");
+      }
+
+      const updatedWallet = await this.walletRepository.decrementBalance(
+        wallet._id!.toString(),
         data.amount,
-        sessionLocal,
+        session,
       );
 
       if (!updatedWallet) {
@@ -97,8 +125,8 @@ export class WalletService {
 
       const transaction = await this.transactionRepository.createTransaction(
         {
-          wallet: walletLocal._id,
-          type: "credit",
+          wallet: wallet._id,
+          type: "debit",
           amount: data.amount,
           balance: updatedWallet.balance,
           description: data.description,
@@ -107,102 +135,40 @@ export class WalletService {
           ownerId: data.ownerId,
           ownerType: data.ownerType,
         },
-        sessionLocal,
+        session,
       );
 
-      await sessionLocal.commitTransaction();
-      sessionLocal.endSession();
       return { wallet: updatedWallet, transaction };
-    } catch (error) {
-      await sessionLocal.abortTransaction();
-      sessionLocal.endSession();
-      throw error;
     }
-  }
 
-  async debitUser(data: DebitWalletDTO, session?: mongoose.ClientSession) {
-    const wallet = await this.getOrCreateWallet(
-      data.ownerId,
-      data.ownerType,
-      session,
-    );
+    const wallet = await this.getOrCreateWallet(data.ownerId, data.ownerType);
 
     if (wallet.balance < data.amount) {
       throw new HttpError(400, "Insufficient balance");
     }
 
-    if (session) {
-      const updatedWallet = await this.walletRepository.decrementBalance(
-        wallet._id!.toString(),
-        data.amount,
-        session,
-      );
+    const updatedWallet = await this.walletRepository.decrementBalance(
+      wallet._id!.toString(),
+      data.amount,
+    );
 
-      if (!updatedWallet) {
-        throw new Error("Failed to update wallet balance");
-      }
-
-      const transaction = await this.transactionRepository.createTransaction(
-        {
-          wallet: wallet._id,
-          type: "debit",
-          amount: data.amount,
-          balance: updatedWallet.balance,
-          description: data.description,
-          reference: data.reference,
-          metadata: data.metadata,
-          ownerId: data.ownerId,
-          ownerType: data.ownerType,
-        },
-        session,
-      );
-
-      return { wallet: updatedWallet, transaction };
+    if (!updatedWallet) {
+      throw new Error("Failed to update wallet balance");
     }
 
-    const sessionLocal = await mongoose.startSession();
-    sessionLocal.startTransaction();
+    const transaction = await this.transactionRepository.createTransaction({
+      wallet: wallet._id,
+      type: "debit",
+      amount: data.amount,
+      balance: updatedWallet.balance,
+      description: data.description,
+      reference: data.reference,
+      metadata: data.metadata,
+      ownerId: data.ownerId,
+      ownerType: data.ownerType,
+    });
 
-    try {
-      const walletLocal = await this.getOrCreateWallet(
-        data.ownerId,
-        data.ownerType,
-        sessionLocal,
-      );
-
-      const updatedWallet = await this.walletRepository.decrementBalance(
-        walletLocal._id!.toString(),
-        data.amount,
-        sessionLocal,
-      );
-
-      if (!updatedWallet) {
-        throw new Error("Failed to update wallet balance");
-      }
-
-      const transaction = await this.transactionRepository.createTransaction(
-        {
-          wallet: walletLocal._id,
-          type: "debit",
-          amount: data.amount,
-          balance: updatedWallet.balance,
-          description: data.description,
-          reference: data.reference,
-          metadata: data.metadata,
-          ownerId: data.ownerId,
-          ownerType: data.ownerType,
-        },
-        sessionLocal,
-      );
-
-      await sessionLocal.commitTransaction();
-      sessionLocal.endSession();
-      return { wallet: updatedWallet, transaction };
-    } catch (error) {
-      await sessionLocal.abortTransaction();
-      sessionLocal.endSession();
-      throw error;
-    }
+    return { wallet: updatedWallet, transaction };
   }
 
   async getBalance(ownerId: string, ownerType: "User" | "Business") {
