@@ -20,7 +20,7 @@ export class TicketService {
 
     const isOwner = ticket.bookedBy.toString() === requesterId;
     const isPrivileged =
-      requesterRole === "admin" || requesterRole === "business";
+      requesterRole === "admin" || requesterRole === "Business";
 
     if (!isOwner && !isPrivileged) {
       throw new Error("Not allowed to view this ticket");
@@ -42,7 +42,7 @@ export class TicketService {
     // ownership check based on the tickets
     const isOwner = tickets[0].bookedBy.toString() === requesterId;
     const isPrivileged =
-      requesterRole === "admin" || requesterRole === "business";
+      requesterRole === "admin" || requesterRole === "Business";
 
     if (!isOwner && !isPrivileged) {
       throw new Error("Not allowed to view these tickets");
@@ -87,7 +87,7 @@ export class TicketService {
 
     const isOwner = ticket.bookedBy.toString() === requesterId;
     const isPrivileged =
-      requesterRole === "admin" || requesterRole === "business";
+      requesterRole === "admin" || requesterRole === "Business";
 
     if (!isOwner && !isPrivileged) {
       throw new Error("Not allowed to void this ticket");

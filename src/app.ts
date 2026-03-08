@@ -8,6 +8,8 @@ import businessRouter from "./features/business/routes/business.routes";
 import tripRouter from "./features/trip/routes/trip.route";
 import bookingRouter from "./features/booking/routes/booking.route";
 import ticketRouter from "./features/ticket/routes/ticket.routes";
+import paymentRouter from "./features/payment/routes/payment.route";
+import walletRouter from "./features/payment/wallet/routes/wallet.route";
 
 const app: Application = express();
 
@@ -38,4 +40,6 @@ app.use("/api/trip", tripRouter);
 app.use("/api/booking", bookingRouter);
 
 app.use("/api/ticket", ticketRouter);
+app.use("/api/payment", paymentRouter);
+app.use("/api/wallet", walletRouter);
 export default app;
