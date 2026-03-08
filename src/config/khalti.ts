@@ -1,6 +1,18 @@
 import axios from "axios";
 
-type KhaltiInitiatePayload = {
+export const KHALTI_CONFIG = {
+  baseUrl: "https://a.khalti.com/api/v2",
+};
+
+export const getKhaltiConfig = () => {
+  return {
+    baseUrl: KHALTI_CONFIG.baseUrl,
+    secretKey: process.env.KHALTI_TEST_SECRET_KEY,
+    publicKey: process.env.KHALTI_TEST_PUBLIC_KEY,
+  };
+};
+
+export const initiateKhaltiPayment = async (data: {
   return_url: string;
   website_url: string;
   amount: number;
@@ -9,73 +21,61 @@ type KhaltiInitiatePayload = {
   customer_info: {
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
   };
-};
-
-const KHALTI_BASE_URL =
-  process.env.KHALTI_BASE_URL || "https://a.khalti.com/api/v2";
-
-const getKhaltiKeys = () => {
-  const secretKey = process.env.KHALTI_TEST_SECRET_KEY;
-  const publicKey = process.env.KHALTI_TEST_PUBLIC_KEY;
+}) => {
+  const { baseUrl, secretKey } = getKhaltiConfig();
 
   if (!secretKey) {
-    throw new Error("KHALTI_TEST_SECRET_KEY is not configured");
+    throw new Error("KHALTI_TEST_SECRET_KEY is missing in .env");
   }
 
-  if (!publicKey) {
-    throw new Error("KHALTI_TEST_PUBLIC_KEY is not configured");
-  }
-
-  return { secretKey, publicKey };
-};
-
-export const initiateKhaltiPayment = async (payload: KhaltiInitiatePayload) => {
-  const { secretKey } = getKhaltiKeys();
   try {
     const response = await axios.post(
-      `${KHALTI_BASE_URL}/epayment/initiate/`,
-      payload,
+      `${baseUrl}/epayment/initiate/`,
+      {
+        ...data,
+        amount: Math.round(data.amount * 100),
+      },
       {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Key ${secretKey}`,
+          "Content-Type": "application/json",
         },
       },
     );
+
     return response.data;
   } catch (error: any) {
-    const data = error?.response?.data;
-    const errorMessage =
-      data?.detail || data?.message || "Failed to initiate Khalti payment";
-    throw new Error(errorMessage);
+    throw new Error(
+      error.response?.data?.detail || "Failed to initiate Khalti payment",
+    );
   }
 };
 
 export const verifyKhaltiPayment = async (pidx: string) => {
-  const { secretKey } = getKhaltiKeys();
+  const { baseUrl, secretKey } = getKhaltiConfig();
+
+  if (!secretKey) {
+    throw new Error("KHALTI_TEST_SECRET_KEY is missing in .env");
+  }
+
   try {
     const response = await axios.post(
-      `${KHALTI_BASE_URL}/epayment/lookup/`,
+      `${baseUrl}/epayment/lookup/`,
       { pidx },
       {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Key ${secretKey}`,
+          "Content-Type": "application/json",
         },
       },
     );
+
     return response.data;
   } catch (error: any) {
-    const data = error?.response?.data;
-    const errorMessage =
-      data?.detail || data?.message || "Failed to verify Khalti payment";
-    throw new Error(errorMessage);
+    throw new Error(
+      error.response?.data?.detail || "Failed to verify Khalti payment",
+    );
   }
-};
-
-export const getKhaltiPublicKey = () => {
-  const { publicKey } = getKhaltiKeys();
-  return publicKey;
 };
